@@ -1,7 +1,7 @@
 rm(list=ls())
 library(parallel)
 library(cocor)
-library(gtools)
+library(data.table)
 options(stringsAsFactors = F)
 
 # ==== Expression Background ====
@@ -11,8 +11,7 @@ head(rownames(expressionRank))
 iqr<-apply(expressionRank, 1, IQR)
 qt<-quantile(iqr, probs=.995)
 exprs_rnk<-expressionRank[iqr>qt,]
-combination_of_genes<-combinations(nrow(exprs_rnk),2)
-number_of_combinations<-nrow(combination_of_genes)
+number_of_combinations<-choose(nrow(exprs_rnk),2)
 
 idxAD<-grep("AD", colnames(exprs_rnk))
 t_exprs_rnk = exprs_rnk[,idxAD]
@@ -22,8 +21,8 @@ n.t<-ncol(t_exprs_rnk)
 gene.names<-rownames(exprs_rnk)
 
 ProcessElement <- function(ic){
-  	A<-combination_of_genes[ic,1]
-  	B<-combination_of_genes[ic,2]
+  	A = ceiling((sqrt(8*(ic+1)-7)+1)/2)
+  	B = ic-choose(floor(1/2+sqrt(2*ic)),2)
     
   	c_A = c_exprs_rnk[A,]
   	c_B = c_exprs_rnk[B,]
@@ -57,14 +56,3 @@ pb = txtProgressBar(min=0,max=number_of_combinations,style=3,initial=0)
 cat("\n")
 res = mclapply(input,ProcessElement,mc.cores=nc)
 close(pb)
-
-# save results
-saveRDS(res,paste0("/shared/hidelab2/user/md1wwxx/ADCorrChange/output/hallmark/ROSMAP_AD_NCI__gene_corr_change.RDS"))
-result<-data.frame()
-for(i in 1:length(res)){
- 	result<-rbind(result, res[[i]])
-}
-result$FDR<-p.adjust(result$p.cocor, method="fdr")
-write.table(result, file="/shared/hidelab2/user/md1wwxx/ADCorrChange/output/hallmark/ROSMAP_AD_NCI_gene_corr_change.txt", sep="\t", row.names=FALSE, quote = FALSE)
-
-rm(list=ls())
