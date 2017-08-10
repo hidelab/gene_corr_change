@@ -1,4 +1,4 @@
-source("/home/md1wwxx/sharedmd1wwxx/src/r2p.R")
+source("r2p.R")
 library(reshape2)
 gene.cor.long<-function(x, method="spearman") {
 	corr<-cor(x, method=method)
