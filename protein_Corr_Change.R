@@ -1,6 +1,6 @@
 rm(list=ls())
-source("/home/md1wwxx/sharedmd1wwxx/src/gene.cor.long.R")
-source("/home/md1wwxx/sharedmd1wwxx/src/pdiffcorr.R")
+source("gene.cor.long.R")
+source("pdiffcorr.R")
 options(stringsAsFactors = F)
 
 # ==== Expression Background ====
@@ -17,10 +17,6 @@ x<-protein.data
 keep <- rowSums(x >0) >= 3
 x <- x[keep,]
 nrow(x)
-
-OSGWAS_genes<-c("GLT8D1", "GNL3", "ASTN2", "FILIP1", "SENP6", "KLHDC5", "PTHLH", "CHST11", "TP63", "FTO", "SUPT3H", "CDC5L")
-OSGWAS_genes<-sub("KLHDC5", "KLHL42", OSGWAS_genes)
-setdiff(OSGWAS_genes, rownames(x))
 
 protein.data<-as.matrix(protein.data)
 protein.data<-t(protein.data)
@@ -72,37 +68,3 @@ write.table(x1, file="OA2_D_vs_C_protein_corr_change_sigEdge_p1e-04_Gene_frequen
 write.table(sigEdge2, file="OA2_D_vs_C_protein_corr_change_sigEdge_p1e-04.txt", sep="\t", row.names=FALSE, quote = FALSE)
 sigGenes<-x1$Gene
 length(sigGenes)
-
-intersect(OSGWAS_genes, sigGenes)
-sigEdge.GWAS<-subset(sigEdge2, subset=(Gene.A %in% OSGWAS_genes | Gene.B %in% OSGWAS_genes))
-library(WriteXLS)
-WriteXLS(sigEdge.GWAS, "OA2_D_vs_C_protein_corr_change_sigEdge_GWAS_p1e-04.xlsx")
-intact<-as.data.frame(control)
-degraded<-as.data.frame(treat)
-par(mfrow=c(1,2))
-plot(intact$GNL3, intact$CCAR1)
-plot(degraded$GNL3, degraded$CCAR1)
-
-c_net<-subset(allResults, subset=(FDR.c < 0.1))
-c_net_GWAS_sigGenes<-subset(c_net, subset=(((Gene.A %in% OSGWAS_genes) & (Gene.B %in% sigGenes)) | ((Gene.B %in% OSGWAS_genes) & (Gene.A %in% sigGenes)) ))
-nrow(c_net_GWAS_sigGenes)
-x<-sort(table(c(c_net_GWAS_sigGenes$"Gene.A", c_net_GWAS_sigGenes$"Gene.B")), decreasing = TRUE)
-class(x)
-x1<-as.data.frame(x)
-colnames(x1)<-c("Gene", "Number of significant correlation in control chondrocytes with genes involved in gene-gene correlation")
-OSGWAS_genes_df<-data.frame("Gene"=OSGWAS_genes)
-OSGWAS_genes_df<-merge(OSGWAS_genes_df, x1, all.x=TRUE, by.x="Gene", by.y="Gene")
-
-rm(c_net)
-t_net<-subset(allResults, subset=(FDR.t < 0.1))
-nrow(t_net)
-t_net_GWAS_sigGenes<-subset(t_net, subset=(((Gene.A %in% OSGWAS_genes) & (Gene.B %in% sigGenes)) | ((Gene.B %in% OSGWAS_genes) & (Gene.A %in% sigGenes)) ))
-nrow(t_net_GWAS_sigGenes)
-x<-sort(table(c(t_net_GWAS_sigGenes$"Gene.A", t_net_GWAS_sigGenes$"Gene.B")), decreasing = TRUE)
-class(x)
-x1<-as.data.frame(x)
-colnames(x1)<-c("Gene", "Number of significant correlation in diseased chondrocytes with genes involved in gene-gene correlation")
-OSGWAS_genes_df<-merge(OSGWAS_genes_df, x1, all.x=TRUE, by.x="Gene", by.y="Gene")
-o<-order(OSGWAS_genes_df$Gene, decreasing = FALSE)
-OSGWAS_genes_df<-OSGWAS_genes_df[o,]
-write.table(OSGWAS_genes_df, file="OA2_GWAS_gene_sigdiffcor_protein_correlation_frequency.txt", sep="\t", row.names=FALSE, quote = FALSE)
